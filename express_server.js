@@ -6,7 +6,7 @@ const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
 
-/* Generates a random string, used for creating short URLs and userIDs */
+/* Generates a random string*/
 function generateRandomString() {
   let randomString = "";
   const length = 6;

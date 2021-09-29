@@ -20,6 +20,19 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+//users database
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
 
 /* Generates a random string*/
 function generateRandomString() {
@@ -36,13 +49,13 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = {urls: urlDatabase, username: req.cookies["username"]};
+  const templateVars = {urls: urlDatabase, user: users[req.cookies['user_id']]};
   console.log(templateVars);
   res.render("urls_index", templateVars);
 })
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {username: req.cookies["username"]};
+  const templateVars = {user: users[req.cookies['user_id']]};
 
   console.log(req.params);
   res.render("urls_new", templateVars);
@@ -52,7 +65,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   //console.log(urlDatabase[req.params.shortURL].longURL);
   //console.log(req.params.shortURL === "b2xVn2")
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"]};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies['user_id']]};
   res.render("urls_show", templateVars);
 });
 
@@ -71,7 +84,7 @@ app.get("/urls/:shortURL", (req, res) => {
 
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
+  const templateVars = { urls: urlDatabase, user: users[req.cookies['user_id']]};
   res.render("urls_index", templateVars);
 });
 
@@ -141,6 +154,34 @@ app.get("/set", (req, res) => {
   res.clearCookie('username', {path:'/'});
   res.redirect("/urls");
 });
+
+//registering
+app.get('/register', (req, res) => {
+  const templateVars = { user: users[req.cookies['user_id']] };
+
+    //res.redirect('/register');
+    
+    //const templateVars = {username: req.cookies["username"]};
+    res.render('register', templateVars);
+});
+
+app.post("/register", (req, res) => {
+  const userID = Math.random().toString(36).substring(2, 8);
+  // Extract the email and password from the form
+  // req.body (body-parser) => get the info from our form
+  const email = req.body.email;
+  const password = req.body.password;
+  users[userID] = {
+    userID,
+    email: req.body.email,
+    password: req.body.password
+  };
+  // Setting the cookie in the user's browser
+  res.cookie('user_id', userID);
+  res.redirect('/urls');
+
+  
+ });
 
  //app is listening
  app.listen(PORT, () => {

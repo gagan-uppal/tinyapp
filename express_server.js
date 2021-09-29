@@ -44,6 +44,21 @@ function generateRandomString() {
   return randomString;
 }
 
+// AUTHENTICATION HELPER FUNCTIONS
+
+const findUserByEmail = function (email, users) {
+  for (let userId in users) {
+    const user = users[userId];
+    if (email === user.email) {
+      console.log(user.email);
+      return user;
+    }
+  }
+
+  return false;
+};
+
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -140,9 +155,11 @@ app.get("/set", (req, res) => {
   });
 
   // login page - GET
-  //app.get("/login", (req, res) => {
-  //res.render("login");
- // });
+  app.get("/login", (req, res) => {
+    const templateVars = { user: null};
+   res.render("urls_login", templateVars);
+  });
+
   //login page post
   app.post("/login", (req, res) => {
     console.log(req.body);
@@ -171,11 +188,25 @@ app.post("/register", (req, res) => {
   // req.body (body-parser) => get the info from our form
   const email = req.body.email;
   const password = req.body.password;
+  
+  const userFound = findUserByEmail(email, users);
+
+  console.log('userFound:', userFound);
+
+  if (userFound) {
+    res.status(400).send('Sorry, that user already exists!');
+    return;
+  } 
+   if(email === "" || password === ""){
+    res.status(400).send('Please enter both email and password');
+    return;
+  }
   users[userID] = {
     userID,
     email: req.body.email,
     password: req.body.password
   };
+  
   // Setting the cookie in the user's browser
   res.cookie('user_id', userID);
   res.redirect('/urls');

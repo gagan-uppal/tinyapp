@@ -91,6 +91,12 @@ app.get("/set", (req, res) => {
  app.get("/fetch", (req, res) => {
   res.send(`a = ${a}`);
  });
+ app.get("/u/:shortURL", (req, res) => {
+   const shortURL = req.params.shortURL
+
+   const longURL = urlDatabase[shortURL]
+   res.redirect(longURL);
+ });
  
 
  app.post("/urls", (req, res) => {
@@ -101,13 +107,18 @@ app.get("/set", (req, res) => {
   //res.send("ok");
   res.redirect(`/urls/${shortURL}`);
 });
-  app.get("/u/:shortURL", (req, res) => {
-    const shortURL = req.params.shortURL
 
-    const longURL = urlDatabase[shortURL]
-    res.redirect(longURL);
-  })
+console.log("edit resourse");
+  //edit resource
+  app.post("/urls/:shortURL", (req, res) => {
+    const shortURL = req.params.shortURL;
+  const longURL = req.body.longURL;
 
+   urlDatabase[shortURL] = longURL;
+    
+     res.redirect('/urls');
+    
+  });
   //delete using post
   app.post("/urls/:shortURL/delete", (req, res) => {
 

@@ -50,7 +50,7 @@ const findUserByEmail = function (email, users) {
   for (let userId in users) {
     const user = users[userId];
     if (email === user.email) {
-      console.log(user.email);
+      //console.log(user.email);
       return user;
     }
   }
@@ -65,14 +65,15 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const templateVars = {urls: urlDatabase, user: users[req.cookies['user_id']]};
-  console.log(templateVars);
+  //console.log(templateVars);
   res.render("urls_index", templateVars);
 })
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {user: users[req.cookies['user_id']]};
-
-  console.log(req.params);
+  const user = users[req.cookies['user_id']];
+  const templateVars = {user: user};
+  //console.log("user" , user);
+  //console.log(req.params);
   res.render("urls_new", templateVars);
 });
 
@@ -99,6 +100,7 @@ app.get("/urls/:shortURL", (req, res) => {
 
 
 app.get("/urls", (req, res) => {
+  console.log("cookies", req.cookies);
   const templateVars = { urls: urlDatabase, user: users[req.cookies['user_id']]};
   res.render("urls_index", templateVars);
 });
@@ -206,16 +208,21 @@ app.post("/register", (req, res) => {
 
 //login page post
 app.post("/login", (req, res) => {
-const userID = Math.random().toString(36).substring(2, 8);
+//const userID = Math.random().toString(36).substring(2, 8);
 
   //console.log(req.body);
 const email = req.body.email;
+console.log("email", email);
+console.log("database", users);
 const password = req.body.password;
 const userFound = findUserByEmail(email, users);
+console.log("userfound" , userFound);
 
 if (userFound && userFound.password === password) {
+  const userID = userFound.userID;
+  console.log("userid", userID);
   res.cookie('user_id', userID);
-  res.redirect('/urls/new');
+  res.redirect('/urls/');
 } else
  res.status(403).send('Please enter correct email and password');
 

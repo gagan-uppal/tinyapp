@@ -154,24 +154,7 @@ app.get("/set", (req, res) => {
   res.redirect('/urls');
   });
 
-  // login page - GET
-  app.get("/login", (req, res) => {
-    const templateVars = { user: null};
-   res.render("urls_login", templateVars);
-  });
-
-  //login page post
-  app.post("/login", (req, res) => {
-    console.log(req.body);
-    res.cookie('username', req.body.username);
-  res.redirect('/urls');
-  });
- //logout
- app.post("/logout", (req, res) => {
-  res.clearCookie('username', {path:'/'});
-  res.redirect("/urls");
-});
-
+  
 //registering
 app.get('/register', (req, res) => {
   const templateVars = { user: users[req.cookies['user_id']] };
@@ -213,6 +196,36 @@ app.post("/register", (req, res) => {
 
   
  });
+
+
+ // login page - GET
+ app.get("/login", (req, res) => {
+  const templateVars = { user: null};
+ res.render("urls_login", templateVars);
+});
+
+//login page post
+app.post("/login", (req, res) => {
+const userID = Math.random().toString(36).substring(2, 8);
+
+  //console.log(req.body);
+const email = req.body.email;
+const password = req.body.password;
+const userFound = findUserByEmail(email, users);
+
+if (userFound && userFound.password === password) {
+  res.cookie('user_id', userID);
+  res.redirect('/urls/new');
+} else
+ res.status(403).send('Please enter correct email and password');
+
+});
+//logout
+app.post("/logout", (req, res) => {
+res.clearCookie('user_id', {path:'/'});
+res.redirect("/urls");
+});
+
 
  //app is listening
  app.listen(PORT, () => {

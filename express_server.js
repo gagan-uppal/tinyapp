@@ -16,9 +16,19 @@ app.use(bodyParser.urlencoded({extended: true}));
   "b2xVn2": {longURL: "http://www.lighthouselabs.ca"},
   "9sm5xK": {longURL: "http://www.google.com"}
 }; */
-const urlDatabase = {
+/*const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+};*/
+const urlDatabase = {
+  b6UTxQ: {
+      longURL: "https://www.tsn.ca",
+      userID: "aJ48lW"
+  },
+  i3BoGr: {
+      longURL: "https://www.google.ca",
+      userID: "aJ48lW"
+  }
 };
 //users database
 const users = { 
@@ -59,15 +69,75 @@ const findUserByEmail = function (email, users) {
 };
 
 
+//Helper function
+const urlsForUser = (id) => {
+  const filteredURLs = {};
+  const keys = Object.keys(urlDatabase);
+  //console.log("keys", keys);
+  for (let key of keys) {
+    //console.log(urlDatabase[key]);
+    if(urlDatabase[key]["userID"] === id ){
+      
+      filteredURLs[key] = urlDatabase[key];
+    }
+    //console.log("id", id);
+    //console.log("urlid", urlDatabase[key]["userID"]);
+  }
+   return filteredURLs;
+};
+
+
+
+
 app.get("/", (req, res) => {
+  const id = req.cookies['user_id'];
+  const user = users[id];
+  if (!user){
+    return res.redirect("/login")
+  }
+  res.redirect("/urls");
   res.send("Hello!");
 });
 
-app.get("/urls", (req, res) => {
+/*app.get("/urls", (req, res) => {
   const templateVars = {urls: urlDatabase, user: users[req.cookies['user_id']]};
   //console.log(templateVars);
   res.render("urls_index", templateVars);
-})
+});*/
+
+app.get("/urls", (req, res) => {
+  // read the user id from the cookies
+  const userID = req.cookies['user_id'];
+  //console.log(userID);
+  const user = users[userID]
+  //console.log("user", user)
+  // retrieve the user object from users db
+  if(!user) {
+    return res.redirect("/login");
+    //return res.status(401).send("You must <a href='/l//ogin'>Login</a> first") ;
+  }
+  //userdatabase needs to pass if it is moved to helper file.
+  const urls = urlsForUser(user.id);
+  console.log("urls", urls)
+  //const currentUser = users[userId];
+  const templateVars = { urls, user };
+  res.render("urls_index", templateVars);
+});
+
+/*app.get("/urls/new", (req, res) => {
+  //if user then render otherwise redirect to login page
+  if(req.cookies['user_id']){
+
+    const user = users[req.cookies['user_id']];
+    const templateVars = {user: user};
+    //console.log("user" , user);
+    //console.log(req.params);
+    res.render("urls_new", templateVars);
+
+  }else {
+    res.redirect('/login');
+  }
+});*/
 
 app.get("/urls/new", (req, res) => {
   const user = users[req.cookies['user_id']];
@@ -76,12 +146,23 @@ app.get("/urls/new", (req, res) => {
   //console.log(req.params);
   res.render("urls_new", templateVars);
 });
+/*app.get("/urls/new", (req, res) => {
+  // read the user id value from the cookies
+  const userId = req.cookies['user_id'];
+  if (!userId) {
+    res.redirect("/login");
+  
+  // retrieve the user object from users db
+  const currentUser = users[userId];
+  const templateVars = { user: currentUser };
+  res.render("urls_new", templateVars);
+});*/
 
 
 app.get("/urls/:shortURL", (req, res) => {
   //console.log(urlDatabase[req.params.shortURL].longURL);
   //console.log(req.params.shortURL === "b2xVn2")
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[req.cookies['user_id']]};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.cookies['user_id']]};
   res.render("urls_show", templateVars);
 });
 
@@ -125,28 +206,68 @@ app.get("/set", (req, res) => {
  app.get("/fetch", (req, res) => {
   res.send(`a = ${a}`);
  });
- app.get("/u/:shortURL", (req, res) => {
+ /*app.get("/u/:shortURL", (req, res) => {
    const shortURL = req.params.shortURL
 
-   const longURL = urlDatabase[shortURL]
+   const longURL = urlDatabase[shortURL].longURL
    res.redirect(longURL);
- });
+ });*/
+ app.get("/u/:shortURL", (req, res) => {
+  if (urlDatabase[req.params.shortURL]) {
+    const longURL = urlDatabase[req.params.shortURL].longURL;
+    if (longURL === undefined) {
+      res.status(302);
+    } else {
+      res.redirect(longURL);
+    }
+  } else {
+    res.status(404).send("The short URL you are trying to access does not correspond with a long URL at this time.");
+  }
+});
+
  
+
 
  app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
+  let userID = req.cookies['user_id'];
+  console.log("userID", userID)
+  //urlDatabase[shortURL] = {};
+  //console.log("shorturldb", urlDatabase[shortURL]);
+  urlDatabase[shortURL] = {longURL, userID}
+  //console.log("db", urlDatabase);
+  //urlDatabase[shortURL] = {;
+   // longURL: req.body.longURL,
+  //};
   //console.log(urlDatabase);
   //res.send("ok");
   res.redirect(`/urls/${shortURL}`);
 });
 
+/*const userID = req.cookies['user_id'];
+  //console.log(userID);
+  const user = users[userID]
+  //console.log("user", user)
+  // retrieve the user object from users db
+  if(!user) {
+    return res.redirect("/login");
+    //return res.status(401).send("You must <a href='/l//ogin'>Login</a> first") ;
+  }
+  //userdatabase needs to pass if it is moved to helper file.
+  const urls = urlsForUser(user.id);
+  console.log("urls", urls)
+  //const currentUser = users[userId];
+  const templateVars = { urls, user };
+  res.render("urls_index", templateVars);*/
+
+
   //edit resource
   app.post("/urls/:shortURL", (req, res) => {
+  const userID = 
   const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL].longURL = longURL;
   res.redirect('/urls');
   });
 
@@ -159,6 +280,7 @@ app.get("/set", (req, res) => {
   
 //registering
 app.get('/register', (req, res) => {
+  //const id = req.cookies['user_id'];
   const templateVars = { user: users[req.cookies['user_id']] };
 
     //res.redirect('/register');
@@ -187,7 +309,7 @@ app.post("/register", (req, res) => {
     return;
   }
   users[userID] = {
-    userID,
+    id: userID,
     email: req.body.email,
     password: req.body.password
   };
@@ -212,19 +334,18 @@ app.post("/login", (req, res) => {
 
   //console.log(req.body);
 const email = req.body.email;
-console.log("email", email);
-console.log("database", users);
+//console.log("email", email);
+//console.log("database", users);
 const password = req.body.password;
 const userFound = findUserByEmail(email, users);
-console.log("userfound" , userFound);
 
 if (userFound && userFound.password === password) {
-  const userID = userFound.userID;
+  const userID = userFound.id;
   console.log("userid", userID);
   res.cookie('user_id', userID);
   res.redirect('/urls/');
 } else
- res.status(403).send('Please enter correct email and password');
+ res.status(403).send("Please enter correct email and password. Please <a href='/login'>Login</a>");
 
 });
 //logout

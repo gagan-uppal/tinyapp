@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const bcrypt = require('bcrypt');
 
 const app = express();
 const cookieParser = require('cookie-parser');
@@ -113,8 +114,8 @@ app.get("/urls", (req, res) => {
   //console.log("user", user)
   // retrieve the user object from users db
   if(!user) {
-    return res.redirect("/login");
-    //return res.status(401).send("You must <a href='/l//ogin'>Login</a> first") ;
+    //return res.redirect("/login");
+    return res.status(401).send("You must <a href='/login'>Login</a> first") ;
   }
   //userdatabase needs to pass if it is moved to helper file.
   const urls = urlsForUser(user.id);
@@ -264,7 +265,29 @@ app.get("/set", (req, res) => {
 
   //edit resource
   app.post("/urls/:shortURL", (req, res) => {
-  const userID = 
+    console.log(' print me .... ')
+    const userID = req.cookies['user_id'];
+    const user = users[userID]
+    const userallowedurls =[];
+    //validate user exists 
+    if(!user) {
+      //return res.redirect("/login");
+      return res.status(401).send("You must <a href='/login'>Login</a> first") ;
+    } 
+    
+
+    //get the urls this user is authorizer for 
+    //userallowedurls = urlsForUser(user.id);
+
+    //get the url from URL database
+
+    //add if statement to ask if the shorturl in question does not belong to the user
+     const urls = urlsForUser(user.id);
+     console.log(urls);
+    if(!urls) {
+     return  res.status(401).send("You must <a href='/login'>Login</a> with correct credentials");
+    }
+
   const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
   urlDatabase[shortURL].longURL = longURL;
@@ -311,7 +334,9 @@ app.post("/register", (req, res) => {
   users[userID] = {
     id: userID,
     email: req.body.email,
-    password: req.body.password
+    //password: req.body.password
+    password: bcrypt.hashSync(req.body.password, 10)
+  
   };
   
   // Setting the cookie in the user's browser
@@ -338,12 +363,13 @@ const email = req.body.email;
 //console.log("database", users);
 const password = req.body.password;
 const userFound = findUserByEmail(email, users);
-
-if (userFound && userFound.password === password) {
+console.log("userfound", userFound);
+//if (userFound && userFound.password === //password) {
+  if (userFound && bcrypt.compareSync(req.body.password, userFound.password)) {
   const userID = userFound.id;
-  console.log("userid", userID);
+  //console.log("userid", userID);
   res.cookie('user_id', userID);
-  res.redirect('/urls/');
+  res.redirect('/urls');
 } else
  res.status(403).send("Please enter correct email and password. Please <a href='/login'>Login</a>");
 

@@ -63,12 +63,15 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const userID = getuser(req);
   const user = users[userID]
-  if(!user) {
+  /*if(!user) {
     return res.status(401).send("You must <a href='/login'>Login</a> first") ;
-  }
+  }*/
   const urls = urlsForUser(user.id,urlDatabase);
-  console.log("urls", urls)
   const templateVars = { urls, user };
+
+  if (!userID) {
+    res.statusCode = 401;
+  }
   res.render("urls_index", templateVars);
 });
 
@@ -84,14 +87,25 @@ app.get("/urls/new", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: users[req.session.user_id]};
-  res.render("urls_show", templateVars);
+  //const templateVars = { shortURL: req.params.//shortURL, longURL: urlDatabase[req.params.shortURL].//longURL, user: users[req.session.user_id]};
+  //res.render("urls_show", templateVars);
+  if (urlDatabase[req.params.shortURL]) {
+    let templateVars = {
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL].longURL,
+      urlUserID: urlDatabase[req.params.shortURL].userID,
+      user: users[req.session.user_id],
+    };
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(404).send("The short URL you entered does not correspond with a long URL at this time.");
+  }
 });
 
 
 
+
 app.get("/urls", (req, res) => {
-  //console.log("cookies", req.cookies);
   const templateVars = { urls: urlDatabase, user: users[req.session.user_id]};
   res.render("urls_index", templateVars);
 });
@@ -126,7 +140,7 @@ app.get("/set", (req, res) => {
       res.redirect(longURL);
     }
   } else {
-    res.status(404).send("The short URL you are trying to access does not correspond with a long URL at this time.");
+    res.status(404).send("The short URL you are trying to reach does not correspond with a long URL.");
   }
 });
 
